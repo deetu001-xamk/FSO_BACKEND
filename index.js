@@ -31,7 +31,7 @@ let persons = [
 
     
 const morganTiny = morgan((tokens, req, res) => {
-                                console.log(typeof(tokens.method(req, res)))
+                               
                                 if(tokens.method(req, res) === 'POST') {
                                     return [
                                         tokens.method(req, res),
@@ -59,6 +59,7 @@ const morganTiny = morgan((tokens, req, res) => {
 app.use(express.json())
 app.use(cors())
 app.use(morganTiny)
+app.use(express.static('build'))
 
 app.get('/api/persons', (req , res) => {
     res.json(persons)
