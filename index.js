@@ -1,6 +1,8 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+const Contact = require('./models/contact')
 
 const app = express()
 
@@ -62,7 +64,9 @@ app.use(morganTiny)
 app.use(express.static('build'))
 
 app.get('/api/persons', (req , res) => {
-    res.json(persons)
+    Contact.find({}).then(contacts => {
+        res.json(contacts)
+    })
 })
 
 app.get('/info', (req, res) => {
@@ -72,52 +76,45 @@ app.get('/info', (req, res) => {
 })
 
 app.get('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    const person = persons.find(person => person.id === id)
+    const id = req.params.id
+    
+    Contact.findById(id).then(contact => {
+        res.json(contact)
+    })
 
-    if(person) {
-        res.json(person)
-    } else {
-        res.status(404).end()
-    }
 })
 
 app.delete('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    const person = persons.find(person => person.id === id)
+    const id = req.params.id
     
-    if(person) {
-        persons = persons.filter(person => person.id !== id)
+    Contact.findByIdAndRemove(id).then(result => {
         res.status(204).end()
-    } else {
-        res.status(404).end()
-    }
+    })
 })
 
 app.post('/api/persons', (req, res) => {
 
-    const person = {...req.body, id : Math.floor(Math.random() * 10000) }
-    const check = persons.find((person) => person.name === req.body.name)
     if(!req.body.name || !req.body.number) {
         return res.status(400).json({
             error: 'content missing'
         })
-    } else {
-        if(check){
-            return res.status(400).json({
-                error : 'name must be unique'
-            })
-        } else {
-            persons = persons.concat(person)
-            res.json(person)
-        }
-
     }
+
+    const newContact = new Contact({
+        name: req.body.name,
+        number: req.body.number
+    })
+
+    console.log(newContact)
+
+    Contact.create(newContact).then(result => {
+        res.json(result)
+    })
 
 })
 
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)
 })
